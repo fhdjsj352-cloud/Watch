@@ -7,15 +7,22 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 body{margin:0;padding:12px;font-family:sans-serif;background:var(--tg-theme-bg-color,#fff);color:var(--tg-theme-text-color,#000)}
-#player{width:100%;aspect-ratio:16/9;background:#000}
+#ytbox,#vkbox{width:100%;aspect-ratio:16/9;background:#000}
+#player,#vkframe{width:100%;height:100%;border:0}
+#vkbox{display:none}
 input{width:100%;box-sizing:border-box;padding:10px;margin:10px 0;font-size:16px}
 button{width:100%;padding:12px;font-size:16px}
 </style>
 </head>
 <body>
 <h3>Смотрим вместе</h3>
-<div id="player"></div>
-<input id="link" placeholder="Вставь ссылку на YouTube">
+
+<div id="ytbox"><div id="player"></div></div>
+<div id="vkbox">
+  <iframe id="vkframe" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+<input id="link" placeholder="Вставь ссылку на YouTube или VK Видео">
 <button onclick="loadVideo()">Загрузить видео</button>
 
 <script src="https://www.youtube.com/iframe_api"></script>
@@ -29,10 +36,24 @@ function onYouTubeIframeAPIReady() {
 }
 
 function loadVideo() {
-  const url = document.getElementById('link').value;
-  const m = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
-  if (!m) { alert('Не удалось распознать ссылку'); return; }
-  player.loadVideoById(m[1]);
+  const url = document.getElementById('link').value.trim();
+  const vk = url.match(/video(-?\d+)_(\d+)/);
+  const yt = url.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);
+
+  if (vk) {
+    if (player && player.pauseVideo) player.pauseVideo();
+    document.getElementById('ytbox').style.display = 'none';
+    document.getElementById('vkbox').style.display = 'block';
+    document.getElementById('vkframe').src =
+      'https://vk.ru/video_ext.php?oid=' + vk[1] + '&id=' + vk[2] + '&hd=2&js_api=1';
+  } else if (yt) {
+    document.getElementById('vkframe').src = '';
+    document.getElementById('vkbox').style.display = 'none';
+    document.getElementById('ytbox').style.display = 'block';
+    player.loadVideoById(yt[1]);
+  } else {
+    alert('Не удалось распознать ссылку. Нужна ссылка на YouTube или VK Видео.');
+  }
 }
 </script>
 </body>
